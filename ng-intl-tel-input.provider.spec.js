@@ -8,34 +8,31 @@ describe('ngIntlTelInput Provider', function () {
     beforeEach(inject(function (_$injector_, $compile) {
       $injector = _$injector_;
       element = angular.element(
-        '<form name="form">' +
-        '<label for="tel">Telephone</label>' +
-        '<input ng-model="model.tel" type="text" name="tel" ng-intl-tel-input />' +
-        '</form>'
+        '<input ng-model="model.tel" type="text" name="tel" ng-intl-tel-input />'
       );
     }));
 
-    it('should allow the passsing of utils file', function () {
+    it('should allow the passing of utils file', function () {
       var script = {'utilsScript': '/path/to/utils'};
       provider.set(script);
-      var stub = sinon.stub(element, 'intlTelInput');
+      var stub = sinon.stub(window, 'intlTelInput');
       $injector.invoke(provider.$get).init(element);
-      expect(stub.calledWith(script)).toBe(true);
+      expect(stub.calledWith(element[0], script)).toBe(true);
       stub.restore();
     });
 
-    it('should set default country', function () {
-      provider.set({'defaultCountry': 'af'});
-      $injector.invoke(provider.$get).init(element);
-      expect(element.intlTelInput('getSelectedCountryData').iso2).toEqual('af');
+    it('should set initial country', function () {
+      provider.set({'initialCountry': 'af'});
+      var iti = $injector.invoke(provider.$get).init(element);
+      expect(iti.getSelectedCountryData().iso2).toEqual('af');
     });
 
     it('should set multiple properties', function () {
-      var script = {'defaultCountry': 'us', 'utilsScript': 'lol'};
+      var script = {'initialCountry': 'us', 'utilsScript': 'lol'};
       provider.set(script);
-      var stub = sinon.stub(element, 'intlTelInput');
+      var stub = sinon.stub(window, 'intlTelInput');
       $injector.invoke(provider.$get).init(element);
-      expect(stub.calledWith(script)).toBe(true);
+      expect(stub.calledWith(element[0], script)).toBe(true);
       stub.restore();
     });
   });
@@ -49,17 +46,20 @@ describe('ngIntlTelInput Provider', function () {
       element = angular.element(
         '<form name="form">' +
         '<label for="tel">Telephone</label>' +
-        '<input ng-model="model.tel" type="text" name="tel" ng-intl-tel-input data-default-country="af"/>' +
+        '<input ng-model="model.tel" type="text" name="tel" ng-intl-tel-input data-initial-country="af"/>' +
         '</form>'
       );
     }));
 
     it('should override the default country', inject(function ($compile, $rootScope) {
-      provider.set({'defaultCountry': 'gb'});
+      provider.set({'initialCountry': 'gb'});
       var input = element.find('input');
       $compile(element)($rootScope);
       $rootScope.$digest();
-      expect(input.intlTelInput('getSelectedCountryData').iso2).toEqual('af');
+
+      var iti = findLastCreatedItiInstance();
+
+      expect(iti.getSelectedCountryData().iso2).toEqual('af');
     }));
   });
 });
